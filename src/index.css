@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #070908;
+  --color-bg-secondary: #0a0d0c;
+  --color-surface: rgba(16, 22, 19, 0.52);
+  --color-surface-strong: rgba(15, 21, 18, 0.72);
+  --color-surface-hover: rgba(22, 31, 26, 0.68);
+
+  --color-border: rgba(71, 125, 101, 0.28);
+  --color-border-strong: rgba(65, 205, 135, 0.42);
+
+  --color-green: #00d968;
+  --color-green-bright: #18f078;
+  --color-green-muted: #1d7650;
+
+  --color-text: #f1f4f2;
+  --color-text-secondary: #a4aca7;
+  --color-text-muted: #68716c;
+
+  --font-head: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --animate-portrait-in: portrait-in 900ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  /* Bloom in just behind the portrait. */
+  --animate-glow-in: glow-in 1200ms cubic-bezier(0.23, 1, 0.32, 1) 150ms both;
+  /* Three soft shapes drifting on different, non-multiple periods so the
+     combined blob never visibly repeats. Transform-only, so it stays on the
+     compositor. */
+  --animate-blob-a: blob-a 13s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  --animate-blob-b: blob-b 17s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  --animate-blob-c: blob-c 11s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+
+@keyframes portrait-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@keyframes glow-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes blob-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(18%, -10%) scale(1.15);
+  }
+  66% {
+    transform: translate(-8%, 12%) scale(0.9);
+  }
+}
+
+@keyframes blob-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(-20%, 8%) scale(0.85);
+  }
+  75% {
+    transform: translate(10%, -14%) scale(1.2);
+  }
+}
+
+@keyframes blob-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate(12%, 16%) scale(0.85);
+  }
+}
+
+/* Stronger, more intentional easing than the default CSS curves. */
+@utility ease-out-strong {
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility glass {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+@utility glass-strong {
+  background: var(--color-surface-strong);
+  border: 1px solid rgba(101, 151, 126, 0.25);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: rgba(0, 217, 104, 0.25);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-green-bright);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

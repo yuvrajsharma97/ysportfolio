@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "sharma.yuvraj.ys1@gmail.com";
+    }
+
+    // Singleton documents: content/about, content/socials
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /projects/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /experience/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /capabilities/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /techStack/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -47,7 +47,7 @@ const Contact = () => {
   return (
     <section
       id="contact"
-      className="px-6 pt-28 pb-20 sm:px-10 lg:pt-32 lg:pb-24"
+      className="my-auto px-6 pt-28 pb-20 sm:px-10 lg:pt-32 lg:pb-24"
     >
       <div className="mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-20">
         <div className="text-center lg:text-left">

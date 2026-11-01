@@ -97,8 +97,11 @@ const StackedSection = ({
               }),
         }}
       >
+        {/* At least 80% of the viewport tall, so each card has room to read
+            as its own layer; taller content keeps its natural height. Short
+            content is centred in the spare space. */}
         <motion.div
-          className="overflow-clip rounded-t-[inherit]"
+          className="flex min-h-[80svh] flex-col justify-center overflow-clip rounded-t-[inherit]"
           style={
             recedes
               ? {

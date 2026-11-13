@@ -1,154 +1,116 @@
-import { useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
-import { toast } from "react-toastify";
-import { Loader2 } from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
+import { socials } from "../data/content";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type Status = "idle" | "sending" | "sent" | "failed" | "offline";
+type Errors = Partial<Record<"user_name" | "user_email" | "message", string>>;
 
-const inputClasses =
-  "rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-muted transition-colors duration-200 ease-out-strong focus:border-green-bright";
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const Contact = () => {
-  const formRef = useRef<HTMLFormElement>(null);
-  const [isEmailValid, setIsEmailValid] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const env = {
+  service: import.meta.env.VITE_EMAILJS_SERVICE_ID as string | undefined,
+  template: import.meta.env.VITE_EMAILJS_TEMPLATE_ID as string | undefined,
+  key: import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string | undefined,
+};
 
-  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsEmailValid(EMAIL_PATTERN.test(event.target.value));
+function validate(data: FormData): Errors {
+  const errors: Errors = {};
+  if (!String(data.get("user_name") ?? "").trim()) errors.user_name = "Add your name so I know who is writing.";
+  const email = String(data.get("user_email") ?? "").trim();
+  if (!email) errors.user_email = "Add an email address so I can reply.";
+  else if (!EMAIL.test(email)) errors.user_email = "That address looks incomplete. Write it as name@example.com.";
+  if (String(data.get("message") ?? "").trim().length < 10) errors.message = "Write a little more: at least a sentence.";
+  return errors;
+}
+
+export default function Contact({ resumeUrl }: { resumeUrl: string | null }) {
+  const form = useRef<HTMLFormElement>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [errors, setErrors] = useState<Errors>({});
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget;
+    const data = new FormData(el);
+    if (String(data.get("company") ?? "")) { setStatus("sent"); return; } // honeypot: bots fill it, people never see it
+
+    const found = validate(data);
+    setErrors(found);
+    const first = Object.keys(found)[0];
+    if (first) { (el.elements.namedItem(first) as HTMLElement | null)?.focus(); return; }
+
+    if (!env.service || !env.template || !env.key) { setStatus("offline"); return; }
+
+    setStatus("sending");
+    try {
+      const emailjs = (await import("@emailjs/browser")).default;
+      await emailjs.sendForm(env.service, env.template, el, { publicKey: env.key });
+      el.reset();
+      setStatus("sent");
+    } catch {
+      setStatus("failed");
+    }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const field = (name: keyof Errors) => ({
+    name,
+    id: `f-${name}`,
+    "aria-invalid": errors[name] ? true : undefined,
+    "aria-describedby": errors[name] ? `e-${name}` : undefined,
+    onInput: () => errors[name] && setErrors((x) => ({ ...x, [name]: undefined })),
+  });
 
-    if (!isEmailValid || !formRef.current) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await emailjs.sendForm(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        formRef.current,
-        { publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY },
-      );
-      toast.success("Message sent — thanks for reaching out!");
-      formRef.current.reset();
-      setIsEmailValid(true);
-    } catch {
-      toast.error("Couldn't send your message. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const message: Record<Status, string> = {
+    idle: "",
+    sending: "Sending your message.",
+    sent: "Thanks, your message is on its way. I will reply by email.",
+    failed: "That did not go through. Try again in a minute, or reach me on LinkedIn.",
+    offline: "Nothing was sent: this form is not connected yet. Reach me on LinkedIn for now.",
   };
 
   return (
-    <section
-      id="contact"
-      className="my-auto px-6 pt-28 pb-20 sm:px-10 lg:pt-32 lg:pb-24"
-    >
-      <div className="mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-20">
-        <div className="text-center lg:text-left">
-          <div className="mx-auto mb-8 h-px w-[130px] bg-gradient-to-r from-green to-transparent lg:mx-0" />
-          <h2 className="font-head text-[clamp(44px,6vw,84px)] leading-[1.05] font-normal tracking-[-0.04em]">
-            LET'S BUILD
-            <br />
-            SOMETHING
-            <br />
-            INTERESTING.
-          </h2>
-          <p className="mx-auto mt-7 max-w-[440px] text-sm leading-relaxed text-text-secondary lg:mx-0">
-            Open to front-end and full-stack roles, freelance projects, and
-            interesting collaborations.
-          </p>
+    <section id="contact" className="contact mb-5" aria-labelledby="contact-q">
+      <div className="contact__media" aria-hidden="true">
+        <img src="/photos/glow-1920.webp" srcSet="/photos/glow-960.webp 960w, /photos/glow-1440.webp 1440w, /photos/glow-1920.webp 1920w" sizes="100vw" width={1920} height={1440} alt="" loading="lazy" />
+      </div>
+      <div className="container contact__grid">
+        <div className="contact__intro">
+          <h2 id="contact-q" data-head>Let's talk</h2>
+          <p className="lead" data-rise>Tell me about the role or the project. The message comes straight to my inbox.</p>
+          <ul className="contact__links" data-rise>
+            <li><a className="link" href={socials.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+            <li><a className="link" href={socials.github} target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            {resumeUrl && <li><a className="link" href={resumeUrl} target="_blank" rel="noopener noreferrer">CV</a></li>}
+          </ul>
         </div>
 
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit}
-          aria-label="Contact form"
-          className="glass mx-auto flex w-full max-w-[480px] flex-col gap-4 rounded-[10px] p-6 text-left sm:p-8 lg:max-w-none"
-        >
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="user_name"
-              className="text-xs text-text-secondary uppercase tracking-[0.08em]"
-            >
-              Name
-            </label>
-            <input
-              id="user_name"
-              name="user_name"
-              type="text"
-              autoComplete="name"
-              required
-              placeholder="Your name"
-              className={inputClasses}
-            />
+        <form ref={form} className="form glass" onSubmit={onSubmit} noValidate data-rise>
+          <div className="form__field">
+            <label htmlFor="f-user_name">Name</label>
+            <input type="text" autoComplete="name" required {...field("user_name")} />
+            {errors.user_name && <p className="form__error" id="e-user_name">{errors.user_name}</p>}
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="user_email"
-              className="text-xs text-text-secondary uppercase tracking-[0.08em]"
-            >
-              Email
-            </label>
-            <input
-              id="user_email"
-              name="user_email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="you@example.com"
-              onChange={handleEmailChange}
-              aria-invalid={!isEmailValid}
-              className={`${inputClasses} ${isEmailValid ? "" : "border-red-500 focus:border-red-500"}`}
-            />
-            {!isEmailValid && (
-              <span className="text-xs text-red-400">
-                Please enter a valid email address.
-              </span>
-            )}
+          <div className="form__field">
+            <label htmlFor="f-user_email">Email</label>
+            <input type="email" autoComplete="email" inputMode="email" required {...field("user_email")} />
+            {errors.user_email && <p className="form__error" id="e-user_email">{errors.user_email}</p>}
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="message"
-              className="text-xs text-text-secondary uppercase tracking-[0.08em]"
-            >
-              Message
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows={4}
-              required
-              placeholder="What are you building?"
-              className={`${inputClasses} resize-none`}
-            />
+          <div className="form__field">
+            <label htmlFor="f-message">Message</label>
+            <textarea rows={5} required {...field("message")} />
+            {errors.message && <p className="form__error" id="e-message">{errors.message}</p>}
           </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="group mt-2 inline-flex items-center justify-center gap-2.5 rounded-full border border-green/40 bg-green/[0.08] px-6 py-3.5 text-sm text-text transition-[background-color,border-color] duration-200 ease-out-strong hover:border-green-bright hover:bg-green/[0.14] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                Sending…
-              </>
-            ) : (
-              "Send message"
-            )}
-          </button>
+          <div className="form__trap" aria-hidden="true">
+            <label htmlFor="f-company">Company</label>
+            <input id="f-company" name="company" type="text" tabIndex={-1} autoComplete="off" />
+          </div>
+          <div className="form__foot">
+            <button className="btn" type="submit" disabled={status === "sending"} aria-busy={status === "sending" || undefined}>
+              {status === "sending" ? "Sending" : "Send message"}
+            </button>
+            <p className={`form__status form__status--${status}`} role="status" aria-live="polite">{message[status]}</p>
+          </div>
         </form>
       </div>
     </section>
   );
-};
-
-export default Contact;
+}

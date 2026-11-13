@@ -1,0 +1,33 @@
+[
+ {
+  "shape": "Conversational FAQ",
+  "theme": "dusk",
+  "axes": "dark/grotesk-sans/cool",
+  "hero": "Poster",
+  "nav": "edge-aligned",
+  "footer": "letter close",
+  "imagery": "photographs and the product",
+  "photos": [
+   "Vallee-brouillard.jpg"
+  ],
+  "entry": "index.html",
+  "fingerprint": "faq/poster/portrait-in-photo/glass-case/ledger/tour-pane/form-on-photo",
+  "sections": [
+   "hero",
+   "case",
+   "index",
+   "ledger",
+   "tour",
+   "contact",
+   "footer"
+  ],
+  "signature": "the portrait standing in the fog valley at dusk",
+  "waived": [
+   "44c",
+   "83"
+  ],
+  "prompt": "Full stack developer portfolio for Yuvraj Sharma, website content only, EmailJS form, portrait, GSAP motion after a reference site, /admin CV link",
+  "date": "2026-11-01",
+  "mode": "build"
+ }
+]

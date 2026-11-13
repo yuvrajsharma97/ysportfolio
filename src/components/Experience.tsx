@@ -1,47 +1,31 @@
-import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
-import type { ExperienceEntry } from "../data/types";
-import SectionLabel from "./SectionLabel";
+import type { ExperienceEntry } from "../data/content";
 
-const Experience = () => {
-  const { items: experience, isLoading } =
-    useFirestoreCollection<ExperienceEntry>("experience");
-
-  if (isLoading || experience.length === 0) {
-    return null;
-  }
-
+export default function Experience({ experience }: { experience: ExperienceEntry[] }) {
   return (
-    <section className="px-6 py-16 sm:px-10 lg:py-20">
-      <div className="mx-auto max-w-[1280px]">
-        <SectionLabel>Experience</SectionLabel>
-        <div className="flex flex-col">
-          {experience.map((entry, index) => (
-            <div
-              key={entry.id}
-              className={`grid grid-cols-1 gap-2 py-8 sm:grid-cols-[200px_1fr] sm:gap-8 ${
-                index === 0 ? "" : "border-t border-border"
-              }`}
-            >
-              <p className="font-mono text-xs text-text-secondary uppercase tracking-[0.1em]">
-                {entry.period}
-              </p>
-              <div>
-                <h3 className="font-head text-lg font-medium">
-                  {entry.role}
-                </h3>
-                <p className="mt-1 text-sm text-text-secondary">
-                  {entry.organization}
-                </p>
-                <p className="mt-3 max-w-[560px] text-[13.5px] leading-relaxed text-text-secondary">
-                  {entry.description}
-                </p>
-              </div>
-            </div>
-          ))}
+    <section id="experience" className="section exp" aria-labelledby="exp-q">
+      <div className="container exp__grid">
+        <div className="exp__aside">
+          <h2 id="exp-q" data-head>Where I've worked</h2>
+          <p className="lead qa__muted" data-rise>Three front-end roles, then my MSc at Sussex.</p>
         </div>
+        <ol className="ledger" data-slide>
+          {experience.map((e) => (
+            <li key={e.id}>
+              <details className="ledger__item">
+                <summary className="ledger__head">
+                  <span className="ledger__initial" aria-hidden="true">{e.organization.charAt(0)}</span>
+                  <span className="ledger__who">
+                    <span className="ledger__role">{e.role}</span>
+                    <span className="ledger__org">{e.organization}</span>
+                  </span>
+                  <span className="ledger__when num">{e.period}</span>
+                </summary>
+                <p className="ledger__body">{e.description}</p>
+              </details>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
-};
-
-export default Experience;
+}

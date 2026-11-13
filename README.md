@@ -1,75 +1,34 @@
-# React + TypeScript + Vite
+# Yuvraj Sharma, portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vite, React 19 and TypeScript, with GSAP scroll motion, an EmailJS contact form and a one-field `/admin` page for the CV link.
+The page is prerendered to static HTML at build time, so it reads with scripting off and indexes well.
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+cp .env.example .env.local   # then fill in the values
+npm run dev                  # http://localhost:5173, admin at /admin
+npm run build && npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Where things live
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Projects, experience and the tech stack come from Firestore (`projects`, `experience`, `techStack`, sorted by `order`).
+  Each build bakes them into the HTML and every page load re-reads them, so an edit in Firestore shows on the next
+  visit without a redeploy (`src/lib/live-content.ts`). The project with `order` 1 is the featured one.
+  `src/data/content.ts` is only a fallback for when Firestore cannot be reached.
+- `src/components/`: one file per section. `src/lib/motion.ts`: every animation.
+- `src/styles/tokens.css` and `base.css`: the Hallmark Dusk theme tokens; `site.css`: the page.
+- `public/`: portrait, project screenshots (WebP at 800 and 1600) and the hero photograph.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## The CV link
 
-```
+Stored in Firestore at `content/socials.resumeUrl`. Sign in at `/admin` with the admin Google account
+(set in `VITE_ADMIN_EMAIL` and in `firestore.rules`) and paste the CDN link. The site picks it up on the
+next page load; a build also bakes the current link into the prerendered HTML.
+
+## Deploy (Vercel)
+
+Add the variables from `.env.example` to the Vercel project, and add your domain to
+Firebase Auth's authorised domains so Google sign-in works on `/admin`.

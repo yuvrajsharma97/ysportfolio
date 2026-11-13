@@ -1,25 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#070908" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#070908" />
+    <meta name="theme-color" content="#14161d" />
+    <title>Yuvraj Sharma</title>
+    <meta name="description" content="Yuvraj Sharma, full stack software developer. Projects, experience and a way to get in touch." />
+    <meta property="og:title" content="Yuvraj Sharma" />
+    <meta property="og:description" content="Full stack software developer working in React, Next.js and Node." />
+    <meta property="og:image" content="/photos/glow-1440.webp" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <title>Yuvraj Sharma — Software Engineer</title>
-    <meta
-      name="description"
-      content="Yuvraj Sharma's portfolio — React, Next.js and Node.js projects, skills, and experience. Download resume and get in touch."
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@500&family=Wix+Madefor+Text:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="preload" as="image" href="/photos/glow-1920.webp" imagesrcset="/photos/glow-960.webp 960w, /photos/glow-1440.webp 1440w, /photos/glow-1920.webp 1920w" imagesizes="100vw" fetchpriority="high" />
+    <script>
+      // Motion runs only with scripting on and motion allowed. If the app never signals
+      // it is ready, the hidden-until-animated states are released after 4s.
+      (function () {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var d = document.documentElement;
+        d.classList.add("js");
+        setTimeout(function () { if (!window.__motionReady) d.classList.remove("js"); }, 4000);
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--app--></div>
+    <!--state-->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

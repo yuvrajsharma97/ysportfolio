@@ -1,182 +1,116 @@
-import { useState } from "react";
-import { ArrowUpRight, Download } from "lucide-react";
-import { useFirestoreDocument } from "../hooks/useFirestoreDocument";
-import type { AboutContent, SocialsContent } from "../data/types";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { socials } from "../data/content";
 
-const Hero = () => {
-  const { data: about, isLoading } = useFirestoreDocument<AboutContent>(
-    "content",
-    "about",
-  );
-  const { data: socials } = useFirestoreDocument<SocialsContent>(
-    "content",
-    "socials",
-  );
+const lines = [["I", "build", "fast,"], ["accessible"], ["web", "apps."]];
 
-  if (isLoading || !about) {
-    return null;
-  }
+export default function Hero({ resumeUrl }: { resumeUrl: string | null }) {
+  const hero = useRef<HTMLElement>(null);
 
-  const nameLines = about.name.toUpperCase().split(" ");
-  const links = socials
-    ? [
-        {
-          label: "GitHub",
-          href: socials.github,
-          icon: ArrowUpRight,
-          nudge: "group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
-        },
-        {
-          label: "LinkedIn",
-          href: socials.linkedin,
-          icon: ArrowUpRight,
-          nudge: "group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
-        },
-        {
-          label: "Resume",
-          href: socials.resumeUrl,
-          icon: Download,
-          nudge: "group-hover:translate-y-0.5",
-          download: true,
-        },
-      ].filter((link) => link.href)
-    : [];
+  // Hover: a soft light follows the pointer, and the photo, glow and portrait shift at different
+  // depths. Buttons lean toward the pointer. Fine pointers only, never under reduced motion.
+  useEffect(() => {
+    const el = hero.current;
+    if (!el) return;
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const q = (sel: string, prop: "x" | "y", duration: number) => {
+      const t = el.querySelector(sel);
+      return t ? gsap.quickTo(t, prop, { duration, ease: "power3.out" }) : () => undefined;
+    };
+    const glowX = q("[data-hero-glow]", "x", 0.9), glowY = q("[data-hero-glow]", "y", 0.9);
+    const photoX = q("[data-hero-photo]", "x", 1.4), photoY = q("[data-hero-photo]", "y", 1.4);
+    const figX = q("[data-hero-figure]", "x", 1.1), figY = q("[data-hero-figure]", "y", 1.1);
+
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      const dx = e.clientX - r.left - r.width / 2, dy = e.clientY - r.top - r.height * 0.42;
+      const nx = dx / (r.width / 2), ny = dy / (r.height / 2); // -1..1 from the centre
+      el.classList.add("is-pointer");
+      glowX(dx); glowY(dy);
+      photoX(nx * -22); photoY(ny * -14);
+      figX(nx * 14); figY(ny * 6);
+    };
+    const onLeave = () => {
+      el.classList.remove("is-pointer");
+      glowX(0); glowY(0); photoX(0); photoY(0); figX(0); figY(0);
+    };
+
+    const buttons = [...el.querySelectorAll<HTMLElement>(".hero__actions .btn")];
+    const magnets = buttons.map((b) => {
+      const mx = gsap.quickTo(b, "x", { duration: 0.5, ease: "power3.out" }), my = gsap.quickTo(b, "y", { duration: 0.5, ease: "power3.out" });
+      const move = (e: PointerEvent) => { const r = b.getBoundingClientRect(); mx((e.clientX - r.left - r.width / 2) * 0.25); my((e.clientY - r.top - r.height / 2) * 0.35); };
+      const leave = () => { mx(0); my(0); };
+      b.addEventListener("pointermove", move); b.addEventListener("pointerleave", leave);
+      return () => { b.removeEventListener("pointermove", move); b.removeEventListener("pointerleave", leave); };
+    });
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+    return () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+      magnets.forEach((off) => off());
+    };
+  }, [resumeUrl]); // re-bind so a CV button that arrives after load gets the hover too
 
   return (
-    <section
-      className="relative flex items-center overflow-hidden px-6 pt-16 pb-16 sm:px-10 lg:min-h-svh lg:py-20"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[900px]"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 40%, rgba(0,217,104,0.05), transparent 45%)",
-        }}
-      />
+    <section className="hero" aria-labelledby="hero-title" data-hero ref={hero}>
+      <div className="hero__media" aria-hidden="true">
+        <img
+          className="hero__photo"
+          data-hero-photo
+          src="/photos/glow-1920.webp"
+          srcSet="/photos/glow-960.webp 960w, /photos/glow-1440.webp 1440w, /photos/glow-1920.webp 1920w"
+          sizes="100vw"
+          width={1920}
+          height={1440}
+          alt=""
+          fetchPriority="high"
+        />
+        <div className="hero__scrim" />
+      </div>
+      <div className="hero__glow" data-hero-glow aria-hidden="true" />
 
-      <div className="relative mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-12 lg:grid-cols-[auto_minmax(0,360px)] lg:justify-center lg:gap-20">
-        <div className="text-center lg:w-fit lg:text-left">
-          {about.heroImage && (
-            <HeroPortrait
-              key={about.heroImage}
-              src={about.heroImage}
-              alt={about.name}
-            />
-          )}
-          <h1
-            className={`relative bg-gradient-to-b from-white to-[#c9d2cd] bg-clip-text font-head px-[0.06em] text-[clamp(48px,7vw,108px)] leading-[0.86] font-normal tracking-[-0.06em] text-transparent ${
-              about.heroImage ? "-mt-[0.45em]" : ""
-            }`}
-          >
-            {nameLines.map((line) => (
-              <span key={line} className="block">
-                {line}
+      <div className="hero__figure" data-hero-figure>
+        <img
+          className="hero__portrait"
+          data-hero-portrait
+          src="/portrait.webp"
+          width={900}
+          height={1350}
+          alt="Yuvraj Sharma in a dark suit and glasses"
+        />
+      </div>
+
+      <div className="container hero__grid">
+        <div className="hero__left" data-hero-content>
+          <h1 id="hero-title" className="hero__title">
+            {lines.map((words, i) => (
+              <span className="line" key={i}>
+                <span data-line>
+                  {words.map((w, j) => (
+                    <span key={j}>
+                      <span className="word">{w}</span>
+                      {j < words.length - 1 ? " " : ""}
+                    </span>
+                  ))}
+                </span>{" "}
               </span>
             ))}
           </h1>
         </div>
-
-        <div className="mx-auto w-full max-w-[380px] text-center lg:mx-0 lg:pb-3 lg:text-left">
-          <div className="mx-auto mb-5 h-px w-[110px] bg-gradient-to-r from-green to-transparent lg:mx-0" />
-          <p className="font-mono text-[13px] leading-relaxed text-text-secondary uppercase tracking-[0.28em]">
-            {about.role}
+        <div className="hero__right" data-hero-content>
+          <p className="lead hero__lead" data-hero-fade>
+            Yuvraj Sharma, full stack software developer working in React, Next.js and Node.
           </p>
-          <p className="mt-5 text-[17px] leading-relaxed text-text">
-            {about.shortBio}
-          </p>
-
-          {links.length > 0 && (
-            <ul className="mt-8 border-t border-border text-left">
-              {links.map(({ label, href, icon: Icon, nudge, download }) => (
-                <li key={label} className="border-b border-border">
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={download}
-                    className="group flex items-center justify-between py-3.5 text-sm text-text-secondary transition-colors duration-200 ease-out-strong hover:text-text"
-                  >
-                    {label}
-                    <Icon
-                      size={15}
-                      className={`text-green transition-transform duration-200 ease-out-strong ${nudge}`}
-                    />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="hero__actions" data-hero-fade>
+            {resumeUrl && <a className="btn" href={resumeUrl} target="_blank" rel="noopener noreferrer">View CV</a>}
+            <a className={resumeUrl ? "btn btn--ghost" : "btn"} href={socials.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a className="btn btn--ghost" href={socials.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          </div>
         </div>
       </div>
     </section>
   );
-};
-
-// Stays invisible until the image has actually loaded, so the entrance plays
-// on the portrait itself rather than on an empty box.
-const HeroPortrait = ({ src, alt }: { src: string; alt: string }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  return (
-    <div className="relative mx-auto aspect-[4/5] w-[240px] sm:w-[280px] lg:w-[300px]">
-      <HeroBlob isVisible={isLoaded} />
-      {/* The cutout is cropped at the shoulders; fade its bottom and
-          side edges so it dissolves into the page instead of ending
-          on a hard line. */}
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setIsLoaded(true)}
-        className={`relative h-full w-full object-cover object-top ${
-          isLoaded ? "animate-portrait-in" : "opacity-0"
-        }`}
-        style={{
-          maskImage:
-            "linear-gradient(to bottom, black 55%, transparent 92%), linear-gradient(to right, transparent, black 14%, black 86%, transparent)",
-          maskComposite: "intersect",
-        }}
-        fetchPriority="high"
-      />
-    </div>
-  );
-};
-
-// Three soft-edged shapes drifting around each other read as one living blob.
-// Their edges come from the gradients themselves (no blur filter), so the
-// motion is transform-only and stays cheap.
-const blobShapes = [
-  {
-    className: "left-[8%] top-[6%] h-[62%] w-[70%] animate-blob-a",
-    color: "rgba(0,217,104,0.22)",
-  },
-  {
-    className: "right-[2%] top-[18%] h-[58%] w-[62%] animate-blob-b",
-    color: "rgba(24,240,120,0.14)",
-  },
-  {
-    className: "left-[18%] top-[30%] h-[50%] w-[64%] animate-blob-c",
-    color: "rgba(29,118,80,0.3)",
-  },
-];
-
-const HeroBlob = ({ isVisible }: { isVisible: boolean }) => (
-  <div
-    aria-hidden="true"
-    className={`absolute inset-x-[-25%] top-[-5%] bottom-[10%] ${
-      isVisible ? "animate-glow-in" : "opacity-0"
-    }`}
-  >
-    {blobShapes.map(({ className, color }) => (
-      <div
-        key={className}
-        className={`absolute rounded-full ${className}`}
-        style={{
-          background: `radial-gradient(closest-side, ${color}, transparent)`,
-        }}
-      />
-    ))}
-  </div>
-);
-
-export default Hero;
+}

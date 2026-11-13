@@ -1,35 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email == "sharma.yuvraj.ys1@gmail.com";
     }
 
-    // Singleton documents: content/about, content/socials
+    // content/socials holds resumeUrl, edited from /admin.
     match /content/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /projects/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /experience/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /capabilities/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /techStack/{docId} {
-      allow read: if true;
+    // Collections from the previous site, kept readable and admin-writable.
+    match /{collection}/{docId} {
+      allow read: if collection in ['projects', 'experience', 'techStack', 'capabilities'];
       allow write: if isAdmin();
     }
   }
